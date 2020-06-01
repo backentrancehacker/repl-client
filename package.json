@@ -1,0 +1,16 @@
+{
+	"name": "ReplTalk",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"dependencies": {
+		"node-fetch": "^2.6.0"
+	},
+	"devDependencies": {},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": ["AdCharity", "Repl", "Talk"],
+	"author": "AdCharity",
+	"license": "ISC"
+}
