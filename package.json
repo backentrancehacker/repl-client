@@ -1,5 +1,5 @@
 {
-	"name": "repl-client",
+	"name": "@adcharity/repl-client",
 	"version": "1.0.0",
 	"description": "A simple package to easily interact with Repl Talk.",
 	"main": "index.js",
