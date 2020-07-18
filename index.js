@@ -1,52 +1,45 @@
+// Dependency
 const fetch = require('node-fetch')
+const events = require('events')
 
-const ReplClientError = require('./manager')
+// Modules
+const ReplException = require('./modules/repl-exception.js')
+const headers = require('./modules/headers.js')
+const { query, parse } = require('./modules/utils.js')
 
-const parseJSON = (res) => res.json()
-const parseCookies = (cookies) => {
-	return Object.fromEntries(cookies.split(/; */).map(c => {
-		const [ key, ...v ] = c.split('=');
-		return [ key, decodeURIComponent(v.join('=')) ];
-	}));
-}
-
+const emitter = new events.EventEmitter()
 
 class Client {
 	constructor() {
 		this.details = {}
-		this.cookies
+	}
+	on(e, cb) {
+		emitter.addListener(e, cb)
 	}
     async login(username, password) {
-		if(!username || !password) throw new ReplClientError(100)
+		if(!username || !password) 
+			throw new ReplException('Cannot initialize repl-client without credentials.')
 	
-		let response = await fetch('https://repl.it/login', {
+		let res = await fetch('https://repl.it/login', {
 			method: 'POST',
-			headers: this.getHeaders(),
+			headers,
 			body: JSON.stringify({username, password})
 		})
 		
-		this.cookies = response.headers.raw()['set-cookie'].join(';')
+		global.cookies = res.headers.raw()['set-cookie'].join(';')
 		
-		let data = await parseJSON(response)
-		if(data['message']) throw new ReplClientError('custom', data['message'])
-		let details = ['username', 'email', 'first_name', 'last_name', 'time_created', 'icon', 'karma', 'bio', 'roles', 'id']
+		let data = await parse(res)
 
-		for(let key in data) {
-			if(details.includes(key)) this.details[key] = data[key]
-		}
-		return this.details
-	}
-	getHeaders() {
-		let headers =  {
-			'Referrer': 'https://repl.it/',	
-			'X-Requested-With': 'node-fetch',
-			'Content-Type': 'application/json',
-			"Accept-Encoding": "gzip, deflate, br",
-    		"Connection": "keep-alive",
-			"Origin": 'https://repl.it'
-		}
-		if(this.cookies) headers['Cookie'] = this.cookies
-		return headers
+		if(data['message']) 
+			throw new ReplException(data['message'])
+	
+		let details = ['username', 'email', 'first_name', 'last_name', 'time_created', 'icon', 'karma', 'bio', 'roles', 'id']
+		for(let key in data) 
+			if(details.includes(key)) 
+				this.details[key] = data[key]
+		
+
+		emitter.emit('ready', this.details)
 	}
 	createPost(title, body, board) {
 		const boardMap = {
@@ -58,88 +51,69 @@ class Client {
 			'moderator': 21,
 			'product': 20 
 		}
-		if(!title || !body || !board) throw new ReplClientError(101)
-		else if(!boardMap.hasOwnProperty(board)) throw new ReplClientError(102, board)
+		if(!title || !body || !board) throw new ReplException('Cannot create a post without a title, body, or target board.')
+		else if(!boardMap.hasOwnProperty(board)) throw new ReplException('Invalid board.')
 		else {
-			fetch('https://repl.it/graphql', {
-				method: 'POST',
-				headers: this.getHeaders(),
-				body: JSON.stringify({
-					query: 'mutation createPost($input: CreatePostInput!){createPost(input: $input){post{url}}}',
-					variables: {
-						input: {
-							title,
-							body,
-							boardId: boardMap[board]
-						}
+			return query({
+				query: 'mutation createPost($input: CreatePostInput!){createPost(input: $input){post{url}}}',
+				variables: {
+					input: {
+						title,
+						body,
+						boardId: boardMap[board]
 					}
-				})
+				}
 			})
 		}
 	}
 	async getPost(id) {
-		if(!id) throw new ReplClientError(103)
-		return fetch('https://repl.it/graphql', {
-			method: 'POST',
-			headers: this.getHeaders(),
-			body: JSON.stringify({
-				query: `query{post(id: ${id}){id title url isAuthor isLocked commentCount body isAnnouncement isAnswerable timeCreated canEdit canComment canPin canSetType canReport hasReported isLocked showHosted voteCount canVote hasVoted}}`,
-			})
+		if(!id) throw new ReplException('Cannot find post without an id.')
+		let json = await query({
+			query: 
+				`query{
+					post(id: ${id}){
+						recentComments {
+							body, id, user {
+								id
+							}
+						}
+						id title url isAuthor isLocked commentCount body isAnnouncement isAnswerable timeCreated canEdit canComment canPin canSetType canReport hasReported isLocked showHosted voteCount canVote hasVoted
+					}
+				}`
 		})
-		.then(parseJSON)
-		.then(json => {
-			let relevant = json.data.post
-			let id = relevant.id
-			
-			relevant.remove = () => {
-				return fetch('https://repl.it/graphql', {
-					method: 'POST',
-					headers: this.getHeaders(),
-					body: JSON.stringify({
-						query: 'mutation remove($id: Int!){remove(id: $id){id}}',
-						variables: {
-							input: {
-								id: id
-							}
-						}
-					})
-				}).then(parseJSON)
-			}
-			relevant.upvote = () => {
-				return fetch('https://repl.it/graphql', {
-					method: 'POST',
-					headers: this.getHeaders(),
-					body: JSON.stringify({
-						query: 'mutation createPostVote($postId: Int!){createPostVote(postId: $postId){id}}',
-						variables: {
-							postId: id
-						}
-					})
-				}).then(parseJSON)
-			}
-			relevant.comment = (body) => {
-				return fetch('https://repl.it/graphql', {
-					method: 'POST',
-					headers: this.getHeaders(),
-					body: JSON.stringify({
-						query: "mutation CreateComment($input: CreateCommentInput!){createComment(input: $input){comment{id}}}",
-						variables: {
-							input: {
-								postId: id,
-								body: body
-							}
-						}
-					})
-				})
-				.then(parseJSON)
-				.then(json => {
-					return   json.data.createComment.comment
+		let relevant = json.post
 
-				})
-			}
-			
-			return relevant
-		})
+		relevant.remove = () => {
+			return query({
+				query: 'mutation remove($id: Int!){remove(id: $id){id}}',
+				variables: {
+					id: relevant.id
+				}
+			})
+		}
+		relevant.upvote = () => {
+			return query({
+				query: 'mutation createPostVote($postId: Int!){createPostVote(postId: $postId){id}}',
+				variables: {
+					postId: relevant.id
+				}
+			})
+		}
+		relevant.comment = (body) => {
+			return query({
+				query: "mutation CreateComment($input: CreateCommentInput!){createComment(input: $input){comment{id}}}",
+				variables: {
+					input: {
+						postId: relevant.id,
+						body: body
+					}
+				}
+			})
+			.then(json => {
+				return json.createComment.comment
+			})
+		}
+		return relevant
 	}
 	getPosts({order, boards, pinned, count, searchQuery, languages}) {
 		let variables = {
@@ -150,37 +124,64 @@ class Client {
 			pinPinned: pinned || false,
 			count: count || 1
 		}
-		return fetch('https://repl.it/graphql', {
-			method: 'POST',
-			headers: this.getHeaders(),
-			body: JSON.stringify({
-				query: "query PostsFeed($order: String, $after: String, $searchQuery: String, $languages: [String!], $count: Int, $boardSlugs: [String!], $pinAnnouncements: Boolean, $pinPinned: Boolean){posts(order: $order, after: $after, searchQuery: $searchQuery, languages: $languages, count: $count, boardSlugs: $boardSlugs, pinAnnouncements: $pinAnnouncements, pinPinned: $pinPinned){items {id timeCreated}}}",
-				variables
-			})
+		return query({
+			query: "query PostsFeed($order: String, $after: String, $searchQuery: String, $languages: [String!], $count: Int, $boardSlugs: [String!], $pinAnnouncements: Boolean, $pinPinned: Boolean){posts(order: $order, after: $after, searchQuery: $searchQuery, languages: $languages, count: $count, boardSlugs: $boardSlugs, pinAnnouncements: $pinAnnouncements, pinPinned: $pinPinned){items {id timeCreated}}}",
+			variables
 		})
-		.then(parseJSON)
 		.then(json => {
-			return json.data.posts.items || {}
+			return json.posts.items || {}
 		})
 	}
 	getUser(id) {
-		if(!id) throw new ReplClientError(106)
+		if(!id) throw new ReplException('Cannot find user without an id/username.')
 
 		if(typeof id == "string")
 			query = `query{userByUsername(username: "${id}"){username id url image isHacker isVerified timeCreated fullName displayName}}`
 		else 
 			query = `query{user(id: ${id}){username id url image isHacker  isVerified timeCreated fullName displayName}}`
 
-		return fetch('https://repl.it/graphql', {
-			method: 'POST',
-			headers: this.getHeaders(),
-			body: JSON.stringify({
-				query: `query{userByUsername(username: "${id}"){username id url image isHacker  isVerified timeCreated fullName displayName}}`
+		return query({
+			query: `query{userByUsername(username: "${id}"){username id url image isHacker  isVerified timeCreated fullName displayName}}`
+		})
+	}
+	async getComment(id) {
+		let json = await query({
+			query: 
+				`query{
+					comment(id: ${id}){
+						body id canEdit canComment voteCount canVote hasVoted
+						user {
+							id username
+						}
+					}
+				}`
+		})
+		let comment = json.comment
+		comment.reply = (body) => {
+			return query({
+				query: `mutation CreateComment($input: CreateCommentInput!){createComment(input: $input){comment{id}}}`,
+				variables: {
+					input: {
+						body,
+						commentId: comment.id,
+					}
+				}
 			})
-		}).then(parseJSON)
+		}
+		comment.upvote = () => {
+			return query({
+				query: 'mutation createCommentVote($commentId: Int!){createCommentVote(commentId: $commentId){id}}',
+				variables: {
+					commentId: comment.id
+				}
+			})
+		}
+		return comment
 	}
 }
 
 (() => {
-	module.exports = Client
+	module.exports = {
+		Client
+	}
 }).call(this)

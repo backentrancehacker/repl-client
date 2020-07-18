@@ -1,16 +1,11 @@
 {
 	"name": "@adcharity/repl-client",
-	"version": "1.0.0",
+	"version": "1.0.7",
 	"description": "A simple package to easily interact with Repl Talk.",
 	"main": "index.js",
 	"dependencies": {
 		"node-fetch": "^2.6.0"
 	},
-	"files": [
-		"index.js",
-		"manager.js",
-		"README.md"
-	],
 	"scripts": {
 		"main": "node index.js"
 	},
