@@ -1,7 +1,7 @@
 const fetch = require("node-fetch")
 const events = require("events")
 
-const Exception = require("./src/errors")
+const Exception = require("./src/exception")
 const headers = require("./src/headers")
 const query = require("./src/query")
 const config = require("./config")
@@ -43,9 +43,14 @@ class Client {
 
 		emitter.emit("ready", this.details)
 	}
-	createPost(title, body, board) {
-		if(!title || !body || !board) throw new ReplException('Cannot create a post without a title, body, or target board.')
-		else if(!boardMap.hasOwnProperty(board)) throw new ReplException('Invalid board.')
+	async createPost({ title, body, board }) {
+		if(!title || !body || !board) {
+			throw new Exception("failed to create post, missing title, body or board")
+		}
+		else if(!config.boards.hasOwnProperty(board)) {
+			throw new Exception("invalid board", board)
+		}
+
 		else {
 			return query({
 				query: 'mutation createPost($input: CreatePostInput!){createPost(input: $input){post{url}}}',

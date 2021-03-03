@@ -1,6 +1,6 @@
 class ReplException extends Error {
-	constructor(message) {
-		super(message)
+	constructor(...message) {
+		super(message.join(' '))
 		this.name = "repl-client exception"
 	}
 }
