@@ -1,9 +1,10 @@
 const fetch = require("node-fetch")
 const events = require("events")
 
-const Exception = require("./src/error")
+const Exception = require("./src/errors")
 const headers = require("./src/headers")
 const query = require("./src/query")
+const config = require("./config")
 
 const emitter = new events.EventEmitter()
 
@@ -15,40 +16,34 @@ class Client {
 		emitter.addListener(e, cb)
 	}
     async login(username, password) {
-		if(!username || !password) 
-			throw new ReplException('Cannot initialize repl-client without credentials.')
-	
-		let res = await fetch('https://repl.it/login', {
-			method: 'POST',
+		if(!username || !password) {
+			throw new Exception("no credentials supplied")
+		}
+
+		const res = await fetch("https://repl.it/login", {
+			method: "POST",
 			headers,
-			body: JSON.stringify({username, password})
+			body: JSON.stringify({
+				username, password
+			})
 		})
 		
-		global.cookies = res.headers.raw()['set-cookie'].join(';')
+		global.cookies = res.headers.raw()["set-cookie"].join(';')
 		
-		let data = await parse(res)
+		const user = await res.json()
+		if(data.message) {
+			throw new Exception(data.message)
+		}
 
-		if(data['message']) 
-			throw new ReplException(data['message'])
-	
-		let details = ['username', 'email', 'first_name', 'last_name', 'time_created', 'icon', 'karma', 'bio', 'roles', 'id']
-		for(let key in data) 
-			if(details.includes(key)) 
+		for(const key in data) {
+			if(config.user.includes(key)) {
 				this.details[key] = data[key]
-		
+			}
+		}
 
-		emitter.emit('ready', this.details)
+		emitter.emit("ready", this.details)
 	}
 	createPost(title, body, board) {
-		const boardMap = {
-			'challenge': 16,
-			'ask': 6,
-			'tutorials': 17,
-			'announcements': 14,
-			'share': 6,
-			'moderator': 21,
-			'product': 20 
-		}
 		if(!title || !body || !board) throw new ReplException('Cannot create a post without a title, body, or target board.')
 		else if(!boardMap.hasOwnProperty(board)) throw new ReplException('Invalid board.')
 		else {
