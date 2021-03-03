@@ -7,4 +7,4 @@ module.exports = {
 	"Referrer": "https://repl.it",
 	"Origin": "https://repl.it",
 	"Cookie": global.cookies
-};
+}

@@ -2,6 +2,7 @@ const fetch = require('node-fetch')
 const ReplException = require('./repl-exception.js')
 
 const parse = res => res.json()
+
 const query = async body => {
 	let headers = require('./headers')
 	try {
@@ -17,6 +18,7 @@ const query = async body => {
 		throw new ReplException(e)
 	}
 }
+
 module.exports = {
 	parse,
 	query
