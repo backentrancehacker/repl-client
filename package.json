@@ -1,7 +1,7 @@
 {
 	"name": "@adcharity/repl-client",
 	"version": "1.0.7",
-	"description": "A simple package to easily interact with Repl Talk.",
+	"description": "Unofficial, promised based Repl Talk client",
 	"main": "index.js",
 	"dependencies": {
 		"node-fetch": "^2.6.0"
@@ -10,10 +10,10 @@
 		"main": "node index.js"
 	},
 	"keywords": [
-		"AdCharity",
-		"Repl",
-		"Talk"
+		"repl",
+		"talk",
+		"client"
 	],
-	"author": "AdCharity",
+	"author": "Nathan Pham",
 	"license": "ISC"
 }

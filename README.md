@@ -1,6 +1,5 @@
-## Overview
-* This is a simple package to interact with Repl Talk.
-* It is promised based, unlike many of the callback based packages.
+## Repl Client
+Unofficial, promised based Repl Talk client
 
 ## Usage
 ### Installation

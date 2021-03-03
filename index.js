@@ -1,11 +1,9 @@
-// Dependency
-const fetch = require('node-fetch')
-const events = require('events')
+const fetch = require("node-fetch")
+const events = require("events")
 
-// Modules
-const ReplException = require('./modules/repl-exception.js')
-const headers = require('./modules/headers.js')
-const { query, parse } = require('./modules/utils.js')
+const Exception = require("./src/error")
+const headers = require("./src/headers")
+const query = require("./src/query")
 
 const emitter = new events.EventEmitter()
 
@@ -180,8 +178,4 @@ class Client {
 	}
 }
 
-(() => {
-	module.exports = {
-		Client
-	}
-}).call(this)
+module.exports = Client
