@@ -1,6 +1,6 @@
 {
-	"name": "@adcharity/repl-client",
-	"version": "1.0.7",
+	"name": "repl-post",
+	"version": "1.0.0",
 	"description": "Unofficial, promised based Repl Talk client",
 	"main": "index.js",
 	"dependencies": {
