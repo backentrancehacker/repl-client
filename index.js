@@ -30,7 +30,8 @@ class Client {
 		
 		global.cookies = res.headers.raw()["set-cookie"].join(';')
 		
-		const user = await res.json()
+		const user = await res.text()
+		console.log(user)
 		if(data.message) {
 			throw new Exception(data.message)
 		}
@@ -61,7 +62,7 @@ class Client {
 		console.log(post)
 	}
 
-	
+
 	async getPost(id) {
 		if(!id) throw new Exception('Cannot find post without an id.')
 		let json = await query({

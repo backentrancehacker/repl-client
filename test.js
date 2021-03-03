@@ -1,8 +1,10 @@
 require("dotenv").config()
-const client = new require("./")()
+const ReplClient = require("./")
 
-client.login(process.env.username, process.env.password)
+const client = new ReplClient()
 
 client.on("ready", (details) => {
     console.log(details)
 })
+
+client.login(process.env.username, process.env.password)

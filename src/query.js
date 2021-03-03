@@ -1,5 +1,5 @@
 const fetch = require("node-fetch")
-const Exception = require("./error")
+const Exception = require("./exception")
 
 const parse = res => res.json()
 
@@ -16,7 +16,6 @@ const query = async ({ body, ...options }) => {
 			body: JSON.stringify(body),
 			...options
 		}).then(parse)
-		
 		return res.data || res.errors || {}
 	}
 	catch(e) {
