@@ -43,7 +43,7 @@ class Client {
 
 		emitter.emit("ready", this.details)
 	}
-	async createPost({ title, body, board }) {
+	async create({ title, body, board }) {
 		if(!title || !body || !board) {
 			throw new Exception("failed to create post, missing title, body or board")
 		}
@@ -51,18 +51,14 @@ class Client {
 			throw new Exception("invalid board", board)
 		}
 
-		else {
-			return query({
-				query: 'mutation createPost($input: CreatePostInput!){createPost(input: $input){post{url}}}',
-				variables: {
-					input: {
-						title,
-						body,
-						boardId: boardMap[board]
-					}
-				}
-			})
-		}
+		const post = await query({
+			query: "mutation createPost($input: CreatePostInput!){createPost(input: $input){post{url}}}",
+			variables: {
+				input: { title, body, boardId: config.boards[board] }
+			}
+		})
+
+		console.log(post)
 	}
 	async getPost(id) {
 		if(!id) throw new ReplException('Cannot find post without an id.')
