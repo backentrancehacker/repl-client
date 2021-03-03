@@ -4,6 +4,7 @@
 	"description": "Unofficial, promised based Repl Talk client",
 	"main": "index.js",
 	"dependencies": {
+		"dotenv": "^8.2.0",
 		"node-fetch": "^2.6.0"
 	},
 	"scripts": {

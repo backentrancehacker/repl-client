@@ -4,12 +4,13 @@ Unofficial, promised based Repl Talk client
 ## Usage
 ### Installation
 ```
-const ReplClient = require('@adcharity/repl-client')
+npm install @adcharity/repl-client
 ```
 
 ### Initialize the Client
 ```
-const client = new ReplClient.Client()
+const ReplClient = require("@adcharity/repl-client")
+const client = new ReplClient()
 ```
 
 ### Log In

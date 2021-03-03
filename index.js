@@ -60,8 +60,10 @@ class Client {
 
 		console.log(post)
 	}
+
+	
 	async getPost(id) {
-		if(!id) throw new ReplException('Cannot find post without an id.')
+		if(!id) throw new Exception('Cannot find post without an id.')
 		let json = await query({
 			query: 
 				`query{
@@ -127,16 +129,20 @@ class Client {
 		})
 	}
 	getUser(id) {
-		if(!id) throw new ReplException('Cannot find user without an id/username.')
+		if(!id) throw new Exception('Cannot find user without an id/username.')
 
-		if(typeof id == "string")
-			query = `query{userByUsername(username: "${id}"){username id url image isHacker isVerified timeCreated fullName displayName}}`
-		else 
-			query = `query{user(id: ${id}){username id url image isHacker  isVerified timeCreated fullName displayName}}`
+		// const user = await query({
+		// 	query: ``
+		// })
 
-		return query({
-			query: `query{userByUsername(username: "${id}"){username id url image isHacker  isVerified timeCreated fullName displayName}}`
-		})
+		// if(typeof id == "string")
+		// 	query = `query{userByUsername(username: "${id}"){username id url image isHacker isVerified timeCreated fullName displayName}}`
+		// else 
+		// 	query = `query{user(id: ${id}){username id url image isHacker  isVerified timeCreated fullName displayName}}`
+
+		// return query({
+		// 	query:
+		// })
 	}
 	async getComment(id) {
 		let json = await query({
