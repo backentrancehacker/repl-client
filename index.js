@@ -31,7 +31,6 @@ class Client {
 		global.cookies = res.headers.raw()["set-cookie"].join(';')
 		
 		const user = await res.text()
-		console.log(user)
 		if(data.message) {
 			throw new Exception(data.message)
 		}

@@ -1,10 +1,10 @@
 module.exports = {
-	"Content-Type": "application/json",
-	"Accept": "application/json",
 	"Accept-Encoding": "gzip, deflate, br",
-	"Connection": "keep-alive",
-	"X-Requested-With": "node-fetch",
+	"Content-Type": "application/json",
+	"X-Requested-With": "repl-post",
 	"Referrer": "https://repl.it",
+	"Accept": "application/json",
 	"Origin": "https://repl.it",
-	"Cookie": global.cookies
+	"Connection": "keep-alive",
+	"Cookie": global.cookies || ""
 }
