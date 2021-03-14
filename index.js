@@ -15,33 +15,13 @@ class Client {
 	on(e, cb) {
 		emitter.addListener(e, cb)
 	}
-    async login(username, password) {
-		if(!username || !password) {
-			throw new Exception("no credentials supplied")
+    async login(connect_sid) {
+		if(!connect_sid) {
+			throw new Exception("no connect_sid supplied")
 		}
-
-		const res = await fetch("https://repl.it/login", {
-			method: "POST",
-			headers,
-			body: JSON.stringify({
-				username, password
-			})
-		})
 		
-		global.cookies = res.headers.raw()["set-cookie"].join(';')
-		
-		const user = await res.text()
-		if(data.message) {
-			throw new Exception(data.message)
-		}
-
-		for(const key in data) {
-			if(config.user.includes(key)) {
-				this.details[key] = data[key]
-			}
-		}
-
-		emitter.emit("ready", this.details)
+		global.cookies = `connect.sid: ${connect_sid};`
+		// emitter.emit("ready", null)
 	}
 	async create({ title, body, board }) {
 		if(!title || !body || !board) {

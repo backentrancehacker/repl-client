@@ -3,8 +3,9 @@ const ReplClient = require("./")
 
 const client = new ReplClient()
 
-client.on("ready", (details) => {
-    console.log(details)
+client.login(process.env.connect_sid)
+client.create({
+    title: "test",
+    body: "example post with repl client",
+    board: "share"
 })
-
-client.login(process.env.username, process.env.password)
